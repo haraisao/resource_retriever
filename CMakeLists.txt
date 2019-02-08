@@ -7,7 +7,17 @@ find_package(catkin REQUIRED COMPONENTS rosconsole roslib)
 
 find_package(Boost REQUIRED)
 
+if(WIN32)
+  find_path(CURL_INCLUDE_DIRS curl/curl.h HINTS $ENV{CURL_ROOT})
+  find_library(CURL_LIBRARIES "libcurl_imp.lib" HINTS $ENV{CURL_ROOT})
+  if (EXISTS ${CURL_INCLUDE_DIRS} AND EXISTS ${CURL_LIBRARIES})
+    set(CURL_FOUND True)
+    get_filename_component(CURL_BIN_DIR "${CURL_INCLUDE_DIRS}/../bin" ABSOLUTE)
+  endif()
+else()
 include(FindCURL)
+endif()
+
 if(NOT CURL_FOUND)
   message("CURL not found!  Aborting...")
   fail()
@@ -38,3 +48,10 @@ install(TARGETS ${PROJECT_NAME}
 
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+
+if(WIN32)
+  if(EXISTS "${CURL_BIN_DIR}/libcurl.dll")
+    install(FILES "${CURL_BIN_DIR}/libcurl.dll"
+      DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})
+  endif()
+endif()
